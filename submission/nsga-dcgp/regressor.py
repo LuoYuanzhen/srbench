@@ -550,6 +550,29 @@ def model(est, X=None):
         model_ = model_.replace(k, v)
     return model_
 
+
+def front_model(est, X=None):
+    """
+    input: 
+        est(class NSGA): fitted NSGA model
+        X(DataFrame): the names of each variable
+    output(list): expressions of the first order pareto fronts
+    """
+    # est.fronts is a list of pareto fronts
+    # est.fronts[0] means that the first pareto fronts
+    first_front_models = est.fronts[0]
+    # original expression whose variables are marked as 'x0','x1'...
+    exprs = [model.expr() for model in first_front_models]
+    if X is None or not hasattr(X, 'columns'):
+        return exprs
+    
+    # if you want to replace the name of variables:
+    mappings = {'x' + str(i): k for i, k in enumerate(X.columns)}
+    for k, v in reversed(mappings.items()):
+        for i in range(len(exprs)):
+            # replace each variable's name
+            exprs[i] = exprs[i].replace(k, v)
+    return exprs
 ################################################################################
 # Optional Settings
 ################################################################################
@@ -607,28 +630,32 @@ eval_kwargs = dict(
 # # test here
 # test_parms = {
 #     "pop_size": 100,
-#     "n_gen": 100,
+#     "n_gen": 10,
 #     "n_parent": 16,
 #     "verbose": 1
 # }
-# dataset_path = '/home/luoyuanzhen/STORAGE/dataset/sr_benchmark/Korns-3_train.txt'
+# dataset_path = '/home/luoyuanzhen/store/dataset/sr_benchmark/Korns-3_train.txt'
 # dataset = np.loadtxt(dataset_path)
 # X, y = dataset[:, :-1], dataset[:, -1]
-#
-#
+
+
 # def true_model(x):
 #     return (-x[:, 0] + x[:, 3] + x[:, 3]/x[:, 4])/x[:, 4]
-#
-#
+
+
 # predict = true_model(X)
 # from sklearn.metrics import r2_score
 # print(r2_score(predict, y))
-# exit()
-#
+
 # my_pre_train_fn(est, X, y)
 # est.set_params(**test_parms)
-#
+
 # est.fit(X, y)
-# str_eq = model(est, X)
+# """test model"""
+# best_expr = model(est, X)
+# print(best_expr)
+# print(sp.sympify(best_expr))
+
+# """test front_model"""
+# str_eq = front_model(est, X)
 # print(str_eq)
-# print(sp.sympify(str_eq))
